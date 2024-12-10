@@ -11,7 +11,7 @@ kotlin {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
+    implementation("io.valkey", "valkey-glide", "1.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 

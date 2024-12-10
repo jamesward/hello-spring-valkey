@@ -7,6 +7,7 @@ This project demonstrates a reactive Spring Boot application using Valkey (Redis
 - **Spring Boot**
 - **Kotlin**
 - **Valkey**
+- **GLIDE** (Valkey Client Library)
 - **Spring WebFlux**
 - **Testcontainers**
 

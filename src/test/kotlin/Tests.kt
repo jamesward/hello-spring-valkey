@@ -1,18 +1,18 @@
 package hello
 
+import glide.api.GlideClient
+import glide.api.models.configuration.GlideClientConfiguration
+import glide.api.models.configuration.NodeAddress
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate
-import org.springframework.data.redis.core.getAndAwait
-import org.springframework.data.redis.core.setAndAwait
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
@@ -21,21 +21,36 @@ import org.springframework.web.reactive.function.client.bodyToFlow
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 
+
 @Configuration
 @Testcontainers
-class RedisTestConfiguration {
+class GlideTestConfiguration {
     @Bean
-    @ServiceConnection(name = "redis")
     fun valkey(): GenericContainer<*> = GenericContainer("valkey/valkey:8.0.1").withExposedPorts(6379)
+
+    @Bean
+    fun glideClient(@Autowired valkey: GenericContainer<*>): GlideClient {
+        val address = NodeAddress.builder()
+            .host(valkey.host)
+            .port(valkey.firstMappedPort)
+            .build()
+
+        val config = GlideClientConfiguration.builder()
+            .address(address)
+            .build()
+
+        // todo: can config be async?
+        return GlideClient.createClient(config).get()
+    }
 }
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class Tests {
 
     @Test
-    fun `redis operations test`(@Autowired redisTemplate: ReactiveStringRedisTemplate) = runBlocking {
-        redisTemplate.opsForValue().setAndAwait("test-key", "test-value")
-        val value = redisTemplate.opsForValue().getAndAwait("test-key")
+    fun `basic operations test`(@Autowired glideClient: GlideClient) = runBlocking {
+        glideClient.set("test-key", "test-value").await()
+        val value = glideClient.get("test-key").await()
         assertEquals("test-value", value)
     }
 
