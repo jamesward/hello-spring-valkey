@@ -63,7 +63,7 @@ class Tests {
         testBars.forEach {
             client.post()
                 .uri("/bars")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .contentType(MediaType.TEXT_PLAIN)
                 .bodyValue(it)
                 .awaitExchange { response ->
                     assertEquals(HttpStatus.OK, response.statusCode())
